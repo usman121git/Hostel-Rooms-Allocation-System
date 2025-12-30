@@ -5,8 +5,9 @@ function App() {
   const [students, setStudents] = useState([]);
   const [rooms, setRooms] = useState([]);
   const [search, setSearch] = useState(""); // For students
+  const [studentFeeFilter, setStudentFeeFilter] = useState(""); // New: Paid/Unpaid filter
   const [roomSearch, setRoomSearch] = useState(""); // For rooms
-  const [seatFilter, setSeatFilter] = useState(""); // New: filter by available seats
+  const [seatFilter, setSeatFilter] = useState(""); // Filter by available seats
   const [sortKey, setSortKey] = useState("");
 
   const [name, setName] = useState("");
@@ -89,38 +90,41 @@ function App() {
     }).then(() => loadRooms());
   };
 
-  // ---------------- FILTER + SORT ----------------
-  let filteredStudents = students.filter(
-    (s) =>
+  // ---------------- FILTER + SORT STUDENTS ----------------
+  let filteredStudents = students.filter((s) => {
+    const matchSearch =
       s.name.toLowerCase().includes(search.toLowerCase()) ||
-      s.semester.toLowerCase().includes(search.toLowerCase())
-  );
+      s.semester.toLowerCase().includes(search.toLowerCase());
+
+    const matchFee =
+      studentFeeFilter === ""
+        ? true
+        : studentFeeFilter === "paid"
+        ? s.fee_paid
+        : !s.fee_paid;
+
+    return matchSearch && matchFee;
+  });
 
   if (sortKey) {
-    filteredStudents.sort((a, b) =>
-      a[sortKey].localeCompare(b[sortKey])
-    );
+    filteredStudents.sort((a, b) => a[sortKey].localeCompare(b[sortKey]));
   }
 
   // ---------------- FILTER ROOMS ----------------
   let filteredRooms = rooms.filter((r) => {
     const availableSeats = r.capacity - r.student_count;
-
     const matchNumber = r.room_number.toString().includes(roomSearch);
     const matchSeat = seatFilter ? availableSeats === Number(seatFilter) : true;
-
     return matchNumber && matchSeat;
   });
 
   // ---------------- DASHBOARD CALCULATIONS ----------------
   const totalRooms = rooms.length;
   const totalStudents = students.length;
-
   const seatsAvailable = rooms.reduce(
     (sum, r) => sum + (r.capacity - r.student_count),
     0
   );
-
   const paidStudents = students.filter((s) => s.fee_paid).length;
   const unpaidStudents = totalStudents - paidStudents;
 
@@ -252,7 +256,13 @@ function App() {
 
         <h2>Students List</h2>
 
-        <input style={input} placeholder="Search" value={search} onChange={(e) => setSearch(e.target.value)} />
+        <input style={input} placeholder="Search by Name/Semester" value={search} onChange={(e) => setSearch(e.target.value)} />
+
+        <select style={input} value={studentFeeFilter} onChange={(e) => setStudentFeeFilter(e.target.value)}>
+          <option value="">All Students</option>
+          <option value="paid">Paid Students</option>
+          <option value="unpaid">Unpaid Students</option>
+        </select>
 
         <select style={input} onChange={(e) => setSortKey(e.target.value)}>
           <option value="">Sort By</option>
