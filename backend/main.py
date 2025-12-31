@@ -8,9 +8,13 @@ from models import create_tables
 
 app = FastAPI(title="Hostel Room Allocation System")
 
+# ✅ CORS FIX FOR RENDER + LOCAL
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:3000"],
+    allow_origins=[
+        "http://localhost:3000",
+        "https://hostel-rooms-allocation-system-4emy.onrender.com"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -87,7 +91,8 @@ def delete_room(room_id: int):
         conn.close()
 
 
-# ✅ Room summary with FULL / AVAILABLE indicator
+# -------------------- ROOM SUMMARY --------------------
+
 @app.get("/rooms/summary")
 def rooms_summary():
     conn = get_connection()
@@ -224,14 +229,13 @@ def update_student(
     finally:
         conn.close()
 
-# -------------------- FEE SUMMARY DASHBOARD --------------------
+# -------------------- FEE SUMMARY --------------------
 
 @app.get("/students/fee-summary")
 def fee_summary():
     conn = get_connection()
     try:
         cursor = conn.cursor()
-
         cursor.execute("""
             SELECT
                 SUM(CASE WHEN fee_paid = 1 THEN 1 ELSE 0 END) AS paid_students,
@@ -239,18 +243,17 @@ def fee_summary():
                 COUNT(*) AS total_students
             FROM students
         """)
-
         row = cursor.fetchone()
 
         return {
-            "paid": row[0],
-            "unpaid": row[1],
-            "total": row[2]
+            "paid": row[0] or 0,
+            "unpaid": row[1] or 0,
+            "total": row[2] or 0
         }
     finally:
         conn.close()
 
-# -------------------- UPDATE FEE ONLY (OLD API) --------------------
+# -------------------- UPDATE FEE ONLY --------------------
 
 @app.put("/students/{student_id}/fee")
 def update_fee_status(student_id: int, fee_paid: bool):
