@@ -1,15 +1,13 @@
 import { useEffect, useState } from "react";
 
-const BASE_URL = "https://hostel-rooms-allocation-system-2.onrender.com";
-
 function App() {
   // ---------------- STATES ----------------
   const [students, setStudents] = useState([]);
   const [rooms, setRooms] = useState([]);
-  const [search, setSearch] = useState("");
-  const [studentFeeFilter, setStudentFeeFilter] = useState("");
-  const [roomSearch, setRoomSearch] = useState("");
-  const [seatFilter, setSeatFilter] = useState("");
+  const [search, setSearch] = useState(""); // For students
+  const [studentFeeFilter, setStudentFeeFilter] = useState(""); // New: Paid/Unpaid filter
+  const [roomSearch, setRoomSearch] = useState(""); // For rooms
+  const [seatFilter, setSeatFilter] = useState(""); // Filter by available seats
   const [sortKey, setSortKey] = useState("");
 
   const [name, setName] = useState("");
@@ -22,13 +20,13 @@ function App() {
 
   // ---------------- LOAD DATA ----------------
   const loadStudents = () => {
-    fetch(`${BASE_URL}/students`)
+    fetch("http://127.0.0.1:8000/students")
       .then((res) => res.json())
       .then((data) => setStudents(data));
   };
 
   const loadRooms = () => {
-    fetch(`${BASE_URL}/rooms/summary`)
+    fetch("http://127.0.0.1:8000/rooms/summary")
       .then((res) => res.json())
       .then((data) => setRooms(data));
   };
@@ -41,8 +39,8 @@ function App() {
   // ---------------- ADD / UPDATE STUDENT ----------------
   const addStudent = () => {
     const url = editingId
-      ? `${BASE_URL}/students/${editingId}?name=${name}&semester=${semester}&fee_paid=${feePaid}&room_id=${roomId}`
-      : `${BASE_URL}/students?name=${name}&semester=${semester}&fee_paid=${feePaid}&room_id=${roomId}`;
+      ? `http://127.0.0.1:8000/students/${editingId}?name=${name}&semester=${semester}&fee_paid=${feePaid}&room_id=${roomId}`
+      : `http://127.0.0.1:8000/students?name=${name}&semester=${semester}&fee_paid=${feePaid}&room_id=${roomId}`;
 
     fetch(url, { method: editingId ? "PUT" : "POST" }).then(() => {
       setName("");
@@ -58,7 +56,7 @@ function App() {
   const deleteStudent = (id) => {
     if (!window.confirm("Delete this student?")) return;
 
-    fetch(`${BASE_URL}/students/${id}`, {
+    fetch(`http://127.0.0.1:8000/students/${id}`, {
       method: "DELETE",
     }).then(() => {
       loadStudents();
@@ -69,14 +67,14 @@ function App() {
   // ---------------- FEE TOGGLE ----------------
   const updateFeeStatus = (id, currentStatus) => {
     fetch(
-      `${BASE_URL}/students/${id}/fee?fee_paid=${!currentStatus}`,
+      `http://127.0.0.1:8000/students/${id}/fee?fee_paid=${!currentStatus}`,
       { method: "PUT" }
     ).then(() => loadStudents());
   };
 
   // ---------------- ROOM ACTIONS ----------------
   const addRoom = () => {
-    fetch(`${BASE_URL}/rooms?room_number=${roomNumber}`, {
+    fetch(`http://127.0.0.1:8000/rooms?room_number=${roomNumber}`, {
       method: "POST",
     }).then(() => {
       setRoomNumber("");
@@ -87,7 +85,7 @@ function App() {
   const deleteRoom = (id) => {
     if (!window.confirm("Delete this room?")) return;
 
-    fetch(`${BASE_URL}/rooms/${id}`, {
+    fetch(`http://127.0.0.1:8000/rooms/${id}`, {
       method: "DELETE",
     }).then(() => loadRooms());
   };
@@ -162,9 +160,156 @@ function App() {
   });
 
   return (
-    /* UI CODE UNCHANGED */
     <div style={page}>
-      {/* rest of your JSX exactly same */}
+      <div style={header}>
+        <h1>Hostel Room Allocation System</h1>
+      </div>
+
+      {/* DASHBOARD */}
+      <div style={dashboard}>
+        <div style={card("#2563eb")}><h2>{totalRooms}</h2><p>Total Rooms</p></div>
+        <div style={card("#16a34a")}><h2>{totalStudents}</h2><p>Total Students</p></div>
+        <div style={card("#9333ea")}><h2>{seatsAvailable}</h2><p>Seats Available</p></div>
+        <div style={card("#059669")}><h2>{paidStudents}</h2><p>Paid Students</p></div>
+        <div style={card("#dc2626")}><h2>{unpaidStudents}</h2><p>Unpaid Students</p></div>
+      </div>
+
+      {/* ROOMS */}
+      <div style={section}>
+        <h2>Rooms</h2>
+        <input style={input} placeholder="Room Number" value={roomNumber} onChange={(e) => setRoomNumber(e.target.value)} />
+        <button style={btn} onClick={addRoom}>Add Room</button>
+
+        <br />
+        <input
+          style={input}
+          placeholder="Search by Room Number"
+          value={roomSearch}
+          onChange={(e) => setRoomSearch(e.target.value)}
+        />
+
+        <select
+          style={input}
+          value={seatFilter}
+          onChange={(e) => setSeatFilter(e.target.value)}
+        >
+          <option value="">All Seats</option>
+          <option value="1">1 Seat Available</option>
+          <option value="2">2 Seats Available</option>
+        </select>
+
+        <table style={table}>
+          <thead>
+            <tr>
+              <th style={th}>Room</th>
+              <th style={th}>Status</th>
+              <th style={th}>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredRooms.map((r) => (
+              <tr key={r.id}>
+                <td style={td}>{r.room_number}</td>
+                <td style={td}>
+                  <b style={{ color: r.student_count >= r.capacity ? "red" : "green" }}>
+                    {r.student_count >= r.capacity
+                      ? "FULL"
+                      : `AVAILABLE (${r.capacity - r.student_count} seats)`} 
+                  </b>
+                </td>
+                <td style={td}>
+                  <button style={delBtn} onClick={() => deleteRoom(r.id)}>Delete</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* STUDENTS */}
+      <div style={section}>
+        <h2>{editingId ? "Edit Student" : "Add Student"}</h2>
+
+        <input style={input} placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} />
+        <input style={input} placeholder="Semester" value={semester} onChange={(e) => setSemester(e.target.value)} />
+
+        <select style={input} value={roomId} onChange={(e) => setRoomId(e.target.value)}>
+          <option value="">Select Room</option>
+          {rooms.map((r) => (
+            <option key={r.id} value={r.id}>
+              {r.room_number} {r.student_count >= r.capacity ? "(FULL)" : ""}
+            </option>
+          ))}
+        </select>
+
+        <label>
+          <input type="checkbox" checked={feePaid} onChange={(e) => setFeePaid(e.target.checked)} /> Fee Paid
+        </label>
+
+        <br /><br />
+
+        {roomFull && <p style={{ color: "red", fontWeight: "bold" }}>Selected room is FULL</p>}
+
+        <button style={roomFull ? disabledBtn : btn} onClick={addStudent} disabled={roomFull}>
+          {editingId ? "Update Student" : "Add Student"}
+        </button>
+
+        <h2>Students List</h2>
+
+        <input style={input} placeholder="Search by Name/Semester" value={search} onChange={(e) => setSearch(e.target.value)} />
+
+        <select style={input} value={studentFeeFilter} onChange={(e) => setStudentFeeFilter(e.target.value)}>
+          <option value="">All Students</option>
+          <option value="paid">Paid Students</option>
+          <option value="unpaid">Unpaid Students</option>
+        </select>
+
+        <select style={input} onChange={(e) => setSortKey(e.target.value)}>
+          <option value="">Sort By</option>
+          <option value="name">Name</option>
+          <option value="semester">Semester</option>
+        </select>
+
+        <table style={table}>
+          <thead>
+            <tr>
+              <th style={th}>ID</th>
+              <th style={th}>Name</th>
+              <th style={th}>Semester</th>
+              <th style={th}>Fee</th>
+              <th style={th}>Room</th>
+              <th style={th}>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {filteredStudents.map((s) => (
+              <tr key={s.id}>
+                <td style={td}>{s.id}</td>
+                <td style={td}>{s.name}</td>
+                <td style={td}>{s.semester}</td>
+                <td style={td}>
+                  <span style={feeBadge(s.fee_paid)} onClick={() => updateFeeStatus(s.id, s.fee_paid)}>
+                    {s.fee_paid ? "PAID" : "UNPAID"}
+                  </span>
+                </td>
+                <td style={td}>{s.room_number}</td>
+                <td style={td}>
+                  <button style={editBtn} onClick={() => {
+                    setEditingId(s.id);
+                    setName(s.name);
+                    setSemester(s.semester);
+                    setFeePaid(s.fee_paid);
+                    setRoomId(s.room_id);
+                  }}>
+                    Edit
+                  </button>
+                  <button style={delBtn} onClick={() => deleteStudent(s.id)}>Delete</button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
