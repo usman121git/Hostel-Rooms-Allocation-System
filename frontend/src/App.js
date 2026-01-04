@@ -10,6 +10,12 @@ function App() {
   // ---------------- STATES ----------------
   const [students, setStudents] = useState([]);
   const [rooms, setRooms] = useState([]);
+
+  // ---------------- AUTH STATE ----------------
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+
   const [search, setSearch] = useState(""); // For students
   const [studentFeeFilter, setStudentFeeFilter] = useState(""); // New: Paid/Unpaid filter
   const [roomSearch, setRoomSearch] = useState(""); // For rooms
@@ -164,6 +170,51 @@ function App() {
     display: "inline-block",
     minWidth: "80px",
   });
+
+  // ---------------- LOGIN HANDLER ----------------
+  const handleLogin = () => {
+    if (username === "admin123" && password === "1234") {
+      setIsAuthenticated(true);
+    } else {
+      alert("Invalid credentials! Try admin123 / 1234");
+    }
+  };
+
+  if (!isAuthenticated) {
+    return (
+      <div style={page}>
+        <div style={{
+          maxWidth: "400px",
+          margin: "100px auto",
+          backgroundColor: "white",
+          padding: "40px",
+          borderRadius: "12px",
+          boxShadow: "0 4px 15px rgba(0,0,0,0.1)",
+          textAlign: "center"
+        }}>
+          <h1 style={{ color: "#1e3a8a", marginBottom: "20px" }}>Admin Login</h1>
+          <input
+            style={{ ...input, width: "90%", padding: "12px", marginBottom: "15px" }}
+            placeholder="Username"
+            value={username}
+            onChange={(e) => setUsername(e.target.value)}
+          />
+          <br />
+          <input
+            type="password"
+            style={{ ...input, width: "90%", padding: "12px", marginBottom: "25px" }}
+            placeholder="Password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+          />
+          <br />
+          <button style={{ ...btn, width: "100%", padding: "12px", fontSize: "16px" }} onClick={handleLogin}>
+            Sign In
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={page}>
