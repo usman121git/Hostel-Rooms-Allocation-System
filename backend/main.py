@@ -8,10 +8,10 @@ from models import create_tables
 
 app = FastAPI(title="Hostel Room Allocation System")
 
-# ✅ CORS FIX FOR RENDER + LOCAL
+# ✅ CORS CONFIGURATION
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Allow ALL origins temporarily for debugging
+    allow_origins=["*"], # Allow ALL origins to avoid CORS issues on Render
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
