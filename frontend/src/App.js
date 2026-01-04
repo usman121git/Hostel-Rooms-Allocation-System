@@ -1,4 +1,3 @@
-const API = process.env.REACT_APP_API_URL;
 import { useEffect, useState } from "react";
 
 function App() {
