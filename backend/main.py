@@ -11,10 +11,7 @@ app = FastAPI(title="Hostel Room Allocation System")
 # ✅ CORS FIX FOR RENDER + LOCAL
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "https://hostel-rooms-allocation-system-4emy.onrender.com"
-    ],
+    allow_origins=["*"],  # Allow ALL origins temporarily for debugging
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

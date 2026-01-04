@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 const API_BASE_URL = process.env.REACT_APP_API_URL || "http://127.0.0.1:8000";
 
 function App() {
+  console.log("Current API_BASE_URL:", API_BASE_URL); // DEBUG LOG
   // ---------------- STATES ----------------
   const [students, setStudents] = useState([]);
   const [rooms, setRooms] = useState([]);
