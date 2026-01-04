@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 
+const API_BASE_URL = process.env.REACT_APP_API_URL || "http://127.0.0.1:8000";
+
 function App() {
   // ---------------- STATES ----------------
   const [students, setStudents] = useState([]);
@@ -20,13 +22,13 @@ function App() {
 
   // ---------------- LOAD DATA ----------------
   const loadStudents = () => {
-    fetch("http://127.0.0.1:8000/students")
+    fetch(`${API_BASE_URL}/students`)
       .then((res) => res.json())
       .then((data) => setStudents(data));
   };
 
   const loadRooms = () => {
-    fetch("http://127.0.0.1:8000/rooms/summary")
+    fetch(`${API_BASE_URL}/rooms/summary`)
       .then((res) => res.json())
       .then((data) => setRooms(data));
   };
@@ -39,8 +41,8 @@ function App() {
   // ---------------- ADD / UPDATE STUDENT ----------------
   const addStudent = () => {
     const url = editingId
-      ? `http://127.0.0.1:8000/students/${editingId}?name=${name}&semester=${semester}&fee_paid=${feePaid}&room_id=${roomId}`
-      : `http://127.0.0.1:8000/students?name=${name}&semester=${semester}&fee_paid=${feePaid}&room_id=${roomId}`;
+      ? `${API_BASE_URL}/students/${editingId}?name=${name}&semester=${semester}&fee_paid=${feePaid}&room_id=${roomId}`
+      : `${API_BASE_URL}/students?name=${name}&semester=${semester}&fee_paid=${feePaid}&room_id=${roomId}`;
 
     fetch(url, { method: editingId ? "PUT" : "POST" }).then(() => {
       setName("");
@@ -56,7 +58,7 @@ function App() {
   const deleteStudent = (id) => {
     if (!window.confirm("Delete this student?")) return;
 
-    fetch(`http://127.0.0.1:8000/students/${id}`, {
+    fetch(`${API_BASE_URL}/students/${id}`, {
       method: "DELETE",
     }).then(() => {
       loadStudents();
@@ -67,14 +69,14 @@ function App() {
   // ---------------- FEE TOGGLE ----------------
   const updateFeeStatus = (id, currentStatus) => {
     fetch(
-      `http://127.0.0.1:8000/students/${id}/fee?fee_paid=${!currentStatus}`,
+      `${API_BASE_URL}/students/${id}/fee?fee_paid=${!currentStatus}`,
       { method: "PUT" }
     ).then(() => loadStudents());
   };
 
   // ---------------- ROOM ACTIONS ----------------
   const addRoom = () => {
-    fetch(`http://127.0.0.1:8000/rooms?room_number=${roomNumber}`, {
+    fetch(`${API_BASE_URL}/rooms?room_number=${roomNumber}`, {
       method: "POST",
     }).then(() => {
       setRoomNumber("");
@@ -85,7 +87,7 @@ function App() {
   const deleteRoom = (id) => {
     if (!window.confirm("Delete this room?")) return;
 
-    fetch(`http://127.0.0.1:8000/rooms/${id}`, {
+    fetch(`${API_BASE_URL}/rooms/${id}`, {
       method: "DELETE",
     }).then(() => loadRooms());
   };
@@ -100,8 +102,8 @@ function App() {
       studentFeeFilter === ""
         ? true
         : studentFeeFilter === "paid"
-        ? s.fee_paid
-        : !s.fee_paid;
+          ? s.fee_paid
+          : !s.fee_paid;
 
     return matchSearch && matchFee;
   });
@@ -214,7 +216,7 @@ function App() {
                   <b style={{ color: r.student_count >= r.capacity ? "red" : "green" }}>
                     {r.student_count >= r.capacity
                       ? "FULL"
-                      : `AVAILABLE (${r.capacity - r.student_count} seats)`} 
+                      : `AVAILABLE (${r.capacity - r.student_count} seats)`}
                   </b>
                 </td>
                 <td style={td}>
