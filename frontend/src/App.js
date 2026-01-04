@@ -1,9 +1,7 @@
 import { useEffect, useState } from "react";
 
-// AUTOMATICALLY SELECT BACKEND URL
-const API_BASE_URL = window.location.hostname === "localhost"
-  ? "http://127.0.0.1:8000"
-  : "https://hostel-rooms-allocation-system-3.onrender.com";
+// ALWAYS CONNECT TO LIVE BACKEND (Syncs Local & Deployed Data)
+const API_BASE_URL = "https://hostel-rooms-allocation-system-3.onrender.com";
 
 function App() {
   console.log("Current API_BASE_URL:", API_BASE_URL);
